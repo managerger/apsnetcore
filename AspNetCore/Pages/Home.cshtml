@@ -1,0 +1,77 @@
+﻿@page
+@model AspNetCore.Pages.HomeModel
+@{
+	ViewData["Title"] = "Home";
+}
+
+<h2>Home</h2>
+<div>
+	<button id="clear">Clear</button>
+</div>
+<br />
+<a href="/First">First</a>
+<br />
+<div>
+	<input type="text" name="enter" id="interval" />
+</div>
+<br />
+
+<div>
+	<button id="btnStart">Start</button>
+	<button id="btnFinish">Close socket</button>
+</div>
+<div id="socketOutput"></div>
+<script>
+	var socket;
+	var btnStart = document.getElementById("btnStart");
+	btnStart.addEventListener("click", function (e) {
+		e.preventDefault();
+
+		var protocol = location.protocol === "https:" ? "wss:" : "ws:";
+		var wsUri = protocol + "//" + window.location.host;
+		socket = new WebSocket(wsUri);
+		
+		socket.onopen = e => {
+			var newElem = document.createElement("div");
+			newElem.textContent = "socket opened ";
+
+			var interval = document.getElementById("interval").value;
+			socket.send(interval);
+			var output = document.getElementById("socketOutput");
+			output.appendChild(newElem);
+		};
+
+		socket.onclose = function (e) {
+			var newElem = document.createElement("div");
+			newElem.textContent = "socket closed " + e.reason;
+			console.log(e);
+			output.appendChild(newElem);
+		};
+
+		socket.onmessage = function (e) {
+			var newElem = document.createElement("div");
+			newElem.textContent = e.data;
+			console.log(e);
+			var output = document.getElementById("socketOutput");
+			output.appendChild(newElem);
+		};
+
+		socket.onerror = function (e) {
+			console.error(e.data);
+		};
+	});
+
+	var btnFinish = document.getElementById("btnFinish");
+	btnFinish.addEventListener("click", function (e) {
+		e.preventDefault();
+		if (socket) {
+			socket.close();
+		}
+	});
+
+	var clear = document.getElementById("clear");
+	clear.addEventListener("click", function (e) {
+		e.preventDefault();
+		document.getElementById("socketOutput").innerHTML = "";
+	});
+</script>
